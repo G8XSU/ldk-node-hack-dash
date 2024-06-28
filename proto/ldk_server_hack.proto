@@ -1,0 +1,493 @@
+syntax = "proto3";
+package ldk_server_hack;
+
+message GetNodeIdRequest {
+}
+
+message GetNodeIdResponse {
+
+  string node_id = 1;
+}
+
+message GetNodeStatusRequest {
+}
+
+message GetNodeStatusResponse {
+
+  string public_key = 1;
+
+  BestBlock current_best_block = 2;
+
+  optional uint64 latest_wallet_sync_timestamp = 3;
+
+  optional uint64 latest_onchain_wallet_sync_timestamp = 4;
+
+  optional uint64 latest_fee_rate_cache_update_timestamp = 5;
+
+  optional uint64 latest_rgs_snapshot_timestamp = 6;
+
+  optional uint64  latest_node_announcement_broadcast_timestamp = 7;
+}
+
+message BestBlock {
+
+  string block_hash = 1;
+
+  uint32 height = 2;
+
+}
+
+// Retrieve a new on-chain/funding address.
+message OnchainReceiveRequest {
+}
+
+message OnchainReceiveResponse {
+
+  string address = 1;
+}
+
+// Send an on-chain payment to the given address.
+message OnchainSendRequest {
+
+  string address = 1;
+
+  optional uint64 amount_sats = 2;
+}
+
+message OnchainSendResponse {
+
+  string txid = 1;
+}
+
+
+// Return a BOLT11 invoice for the given amount, if specified.
+message Bolt11ReceiveRequest {
+
+  string description = 1;
+
+  uint32 expiry_secs = 2;
+
+  optional uint64 amount_msat = 3;
+}
+
+
+message Bolt11ReceiveResponse {
+
+  string invoice = 1;
+}
+
+// Send a payment for a BOLT11 invoice.
+message Bolt11SendRequest {
+
+  string invoice = 1;
+
+  optional uint64 amount_msat = 2;
+
+}
+
+message Bolt11SendResponse {
+
+  PaymentId payment_id = 1;
+}
+
+// Return a BOLT12 offer for the given amount, if specified.
+message Bolt12ReceiveRequest {
+
+  string description = 1;
+
+  optional uint64 amount_msat = 2;
+}
+
+message Bolt12ReceiveResponse {
+
+  string offer = 1;
+}
+
+// Send a payment for a BOLT11 invoice.
+message Bolt12SendRequest {
+
+  string offer = 1;
+
+  optional uint64 amount_msat = 2;
+
+  optional string payer_note = 3;
+}
+
+message Bolt12SendResponse {
+
+  PaymentId payment_id = 1;
+}
+
+// An identifier for making a payment.
+message PaymentId {
+
+  bytes data = 1;
+}
+
+message ListChannelsRequest {
+
+}
+
+message ListChannelsResponse {
+
+  repeated Channel channels = 1;
+}
+
+message OpenChannelRequest {
+
+  string node_id = 1;
+
+  string address = 2;
+
+  uint64 channel_amount_sats = 3;
+
+  optional uint64 push_to_counterparty_msat = 4;
+
+  bool announce_channel = 5;
+}
+
+message OpenChannelResponse {
+
+  bytes user_channel_id = 1;
+}
+
+message CloseChannelRequest {
+
+  bytes user_channel_id = 1;
+
+  string counterparty_node_id = 2;
+}
+
+message CloseChannelResponse{
+
+}
+
+message ForceCloseChannelRequest {
+
+  bytes user_channel_id = 1;
+
+  string counterparty_node_id = 2;
+}
+
+message ForceCloseChannelResponse {
+
+}
+
+message Channel {
+  // The channel ID (prior to funding transaction generation, this is a random 32-byte
+  // identifier, afterwards this is the transaction ID of the funding transaction XOR the
+  // funding transaction output).
+  //
+  // Note that this means this value is *not* persistent - it can change once during the
+  // lifetime of the channel.
+  string channel_id = 1;
+
+  // The node ID of our the channel's remote counterparty.
+  string counterparty_node_id = 2;
+
+  // The channel's funding transaction output, if we've negotiated the funding transaction with
+  // our counterparty already.
+  optional Outpoint funding_txo = 3;
+
+  // The value, in satoshis, of this channel as it appears in the funding output.
+  uint64 channel_value_sats = 4;
+
+  // The currently negotiated fee rate denominated in satoshi per 1000 weight units,
+  // which is applied to commitment and HTLC transactions.
+  uint32 feerate_sat_per_1000_weight = 5;
+
+  // The available outbound capacity for sending HTLCs to the remote peer.
+  //
+  // The amount does not include any pending HTLCs which are not yet resolved (and, thus, whose
+  // balance is not available for inclusion in new outbound HTLCs). This further does not include
+  // any pending outgoing HTLCs which are awaiting some other resolution to be sent.
+  uint64 outbound_capacity_msat = 6;
+
+  // The available outbound capacity for sending HTLCs to the remote peer.
+  //
+  // The amount does not include any pending HTLCs which are not yet resolved
+  // (and, thus, whose balance is not available for inclusion in new inbound HTLCs). This further
+  // does not include any pending outgoing HTLCs which are awaiting some other resolution to be
+  // sent.
+  uint64 inbound_capacity_msat = 7;
+
+  // The number of required confirmations on the funding transactions before the funding is
+  // considered "locked". The amount is selected by the channel fundee.
+  //
+  // The value will be `None` for outbound channels until the counterparty accepts the channel.
+  optional uint32 confirmations_required = 8;
+
+  // The current number of confirmations on the funding transaction.
+  optional uint32 confirmations = 9;
+
+  // Is `true` if the channel was initiated (and therefore funded) by us.
+  bool is_outbound = 10;
+
+  // Is `true` if both parties have exchanged `channel_ready` messages, and the channel is
+  // not currently being shut down. Both parties exchange `channel_ready` messages upon
+  // independently verifying that the required confirmations count provided by
+  // `confirmations_required` has been reached.
+  bool is_channel_ready = 11;
+
+  // Is `true` if the channel (a) `channel_ready` messages have been exchanged, (b) the
+  // peer is connected, and (c) the channel is not currently negotiating shutdown.
+  //
+  // This is a strict superset of `is_channel_ready`.
+  bool is_usable = 12;
+
+  // Is `true` if this channel is (or will be) publicly-announced
+  bool is_public = 13;
+
+  // The difference in the CLTV value between incoming HTLCs and an outbound HTLC forwarded over
+  // the channel.
+  optional uint32 cltv_expiry_delta = 14;
+
+  // The smallest value HTLC (in msat) the remote peer will accept, for this channel.
+  //
+  // This field is only `None` before we have received either the `OpenChannel` or
+  // `AcceptChannel` message from the remote peer.
+  optional uint64 counterparty_outbound_htlc_minimum_msat = 15;
+
+  // The largest value HTLC (in msat) the remote peer currently will accept, for this channel.
+  optional uint64 counterparty_outbound_htlc_maximum_msat = 16;
+
+  // The available outbound capacity for sending a single HTLC to the remote peer. This is
+  // similar to `outbound_capacity_msat` but it may be further restricted by
+  // the current state and per-HTLC limit(s). This is intended for use when routing, allowing us
+  // to use a limit as close as possible to the HTLC limit we can currently send.
+  uint64 next_outbound_htlc_limit_msat = 17;
+
+  // The minimum value for sending a single HTLC to the remote peer. This is the equivalent of
+  // `next_outbound_htlc_limit_msat` but represents a lower-bound, rather than
+  // an upper-bound. This is intended for use when routing, allowing us to ensure we pick a
+  // route which is valid.
+  uint64 next_outbound_htlc_minimum_msat = 18;
+
+  // The number of blocks (after our commitment transaction confirms) that we will need to wait
+  // until we can claim our funds after we force-close the channel. During this time our
+  // counterparty is allowed to punish us if we broadcasted a stale state. If our counterparty
+  // force-closes the channel and broadcasts a commitment transaction we do not have to wait any
+  // time to claim our non-HTLC-encumbered funds.
+  //
+  // This value will be `None` for outbound channels until the counterparty accepts the channel.
+  optional uint32 force_close_spend_delay = 19;
+
+  // Amount (in millionths of a satoshi) charged per satoshi for payments forwarded outbound
+  // over the channel.
+  uint32 forwarding_fee_proportional_millionths = 20;
+
+  // Amount (in milli-satoshi) charged for payments forwarded outbound over the channel, in
+  // excess of [`forwarding_fee_proportional_millionths`].
+  uint32 forwarding_fee_base_msat = 21;
+}
+
+// Represents to transaction output.
+message Outpoint {
+  // The referenced transaction's txid.
+  string txid = 1;
+  // The index of the referenced output in its transaction's vout.
+  uint32 vout = 2;
+}
+
+message ClaimableOnChannelClose {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+}
+
+message ClaimableAwaitingConfirmations {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+  uint32 confirmation_height = 4;
+}
+
+message ContentiousClaimable {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+  uint32 timeout_height = 4;
+  string payment_hash = 5;
+  string payment_preimage = 6;
+}
+
+message MaybeTimeoutClaimableHTLC {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+  uint32 claimable_height = 4;
+  string payment_hash = 5;
+}
+
+message MaybePreimageClaimableHTLC {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+  uint32 expiry_height = 4;
+  string payment_hash = 5;
+}
+
+message CounterpartyRevokedOutputClaimable {
+  string channel_id = 1;
+  string counterparty_node_id = 2;
+  uint64 amount_satoshis = 3;
+}
+
+message LightningBalance {
+  oneof balance_type {
+      ClaimableOnChannelClose claimable_on_channel_close = 1;
+      ClaimableAwaitingConfirmations claimable_awaiting_confirmations = 2;
+      ContentiousClaimable contentious_claimable = 3;
+      MaybeTimeoutClaimableHTLC maybe_timeout_claimable_htlc = 4;
+      MaybePreimageClaimableHTLC maybe_preimage_claimable_htlc = 5;
+      CounterpartyRevokedOutputClaimable counterparty_revoked_output_claimable = 6;
+  }
+}
+
+message PendingBroadcast {
+  string channel_id = 1;
+  uint64 amount_satoshis = 2;
+}
+
+message BroadcastAwaitingConfirmation {
+  optional string channel_id = 1;
+  uint32 latest_broadcast_height = 2;
+  string latest_spending_txid = 3;
+  uint64 amount_satoshis = 4;
+}
+
+message AwaitingThresholdConfirmations {
+  optional string channel_id = 1;
+  string latest_spending_txid = 2;
+  string confirmation_hash = 3;
+  uint32 confirmation_height = 4;
+  uint64 amount_satoshis = 5;
+}
+
+message PendingSweepBalance {
+  oneof balance_type {
+      PendingBroadcast pending_broadcast = 1;
+      BroadcastAwaitingConfirmation broadcast_awaiting_confirmation = 2;
+      AwaitingThresholdConfirmations awaiting_threshold_confirmations = 3;
+  }
+}
+
+message GetBalancesRequest {}
+
+message GetBalancesResponse {
+    // The total balance of our on-chain wallet.
+    uint64 total_onchain_balance_sats = 1;
+    
+    // The currently spendable balance of our on-chain wallet.
+    // This includes any sufficiently confirmed funds, minus
+    // total_anchor_channels_reserve_sats.
+    uint64 spendable_onchain_balance_sats = 2;
+    
+    // The share of our total balance that we retain as an emergency reserve to (hopefully) be
+    // able to spend the Anchor outputs when one of our channels is closed.
+    uint64 total_anchor_channels_reserve_sats = 3;
+    
+    // The total balance that we would be able to claim across all our Lightning channels.
+    // Note this excludes balances that we are unsure if we are able to claim (e.g., as we are
+    // waiting for a preimage or for a timeout to expire). These balances will however be included
+    // as MaybePreimageClaimableHTLC and MaybeTimeoutClaimableHTLC in lightning_balances.
+    uint64 total_lightning_balance_sats = 4;
+    
+    // A detailed list of all known Lightning balances that would be claimable on channel closure.
+    // Note that less than the listed amounts are spendable over lightning as further reserve
+    // restrictions apply. Please refer to ChannelDetails::outbound_capacity_msat and
+    // ChannelDetails::next_outbound_htlc_limit_msat as returned by Node::list_channels
+    // for a better approximation of the spendable amounts.
+    repeated LightningBalance lightning_balances = 5;
+    
+    // A detailed list of balances currently being swept from the Lightning to the on-chain
+    // wallet.
+    // These are balances resulting from channel closures that may have been encumbered by a
+    // delay, but are now being claimed and useable once sufficiently confirmed on-chain.
+    // Note that, depending on the sync status of the wallets, swept balances listed here might or
+    // might not already be accounted for in total_onchain_balance_sats.
+    repeated PendingSweepBalance pending_balances_from_channel_closures = 6;
+}
+
+message PaymentDetails {
+  PaymentId id = 1;
+  PaymentKind kind = 2;
+  optional uint64 amount_msat = 3;
+  PaymentDirection direction = 4;
+  PaymentStatus status = 5;
+  uint64 latest_update_timestamp = 6;
+}
+
+message PaymentKind {
+  oneof kind {
+      Onchain onchain = 1;
+      Bolt11 bolt11 = 2;
+      Bolt11Jit bolt11Jit = 3;
+      Bolt12Offer bolt12offer = 4;
+      Bolt12Refund bolt12refund = 5;
+      Spontaneous spontaneous = 6;
+  }
+}
+
+message Onchain {}
+
+message Bolt11 {
+  string hash = 1;
+  optional string preimage = 2;
+  optional bytes secret = 3;
+}
+
+message Bolt11Jit {
+  string hash = 1;
+  optional string preimage = 2;
+  optional bytes secret = 3;
+  LSPFeeLimits lsp_fee_limits = 4;
+}
+
+message Bolt12Offer {
+  optional string hash = 1;
+  optional string preimage = 2;
+  optional bytes secret = 3;
+  bytes offer_id = 4;
+}
+
+message Bolt12Refund {
+  optional string hash = 1;
+  optional string preimage = 2;
+  optional bytes secret = 3;
+}
+
+message Spontaneous {
+  string hash = 1;
+  optional string preimage = 2;
+}
+
+message LSPFeeLimits {
+  optional uint64 max_total_opening_fee_msat = 1;
+  optional uint64 max_proportional_opening_fee_ppm_msat = 2;
+}
+
+enum PaymentDirection {
+  INBOUND = 0;
+  OUTBOUND = 1;
+}
+
+enum PaymentStatus {
+  PENDING = 0;
+  SUCCEEDED = 1;
+  FAILED = 2;
+}
+
+message PaymentsHistoryRequest {}
+
+message PaymentsHistoryResponse {
+  repeated PaymentDetails payments = 1;
+}
+
+message GetPaymentDetailsRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentDetailsResponse {
+  PaymentDetails payment = 1;
+}
