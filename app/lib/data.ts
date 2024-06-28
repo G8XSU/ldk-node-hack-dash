@@ -199,38 +199,8 @@ export async function getNodeBalances(): Promise<ldk_server.GetBalancesResponse>
 }
 
 
-
-
-// export function postRequest<T, J>(endpoint: string, requestType: T, responseType: J): J {
-//   try {
-//     noStore();
-//     const request = requestType.create();
-//     const byteBuffer = requestType.encode(request).finish();
-//     const response = await axios.post(`${ baseUrl }${ endpoint } `, byteBuffer, {
-//       headers: {
-//         'Content-Type': 'application/octet-stream',
-//       },
-//       responseType: 'arraybuffer'
-//     });
-
-//     const deserResponse = responseType.decode(response.data);
-//     return deserResponse;
-
-//   } catch (error) {
-//     console.error('Request Error:', error);
-//     throw new Error(`Failed to make request to ${ endpoint }.`);
-//   }
-// }
-
-// export async function fetchLatestInvoices() {
-//   GetNodeStatusResponse.decode
-//   console.log(postRequest('/getNodeStatus', GetNodeStatusRequest, GetNodeStatusResponse).);
-
-//   return [];
-// }
 export async function fetchLatestInvoices() {
   getNodeStatus();
-  Bolt11Receive('DemoINvoice', 2300, 2300);
   getNodeBalances();
   listChannels();
 
