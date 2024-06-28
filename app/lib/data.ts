@@ -19,7 +19,7 @@ const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
 })
 
-const baseUrl: string = 'http://localhost:3000';
+const baseUrl: string = process.env.LDK_SERVER_API; // 'http://ldk-node-hack-server:3000';
 
 export async function fetchRevenue() {
   try {

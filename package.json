@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "dev": "next dev -p 8080",
+    "dev": "LDK_SERVER_API=http://localhost:3000 next dev -p 8080",
+    "docker": "LDK_SERVER_API=http://ldk-node-hack-server:3000 next dev -p 8080",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "start": "next start",
