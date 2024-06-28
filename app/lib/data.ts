@@ -1,5 +1,3 @@
-//import { sql } from '@vercel/postgres';
-//const db = require('./db.js');
 import { Pool } from 'pg';
 import {
   CustomerField,
@@ -37,9 +35,9 @@ export async function fetchRevenue() {
   }
 }
 // i have multiple endpoints such as this, create exactly same function Bolt11ReceiveRequest, Bolt11ReceiveResponse, in addition to this 
-export async function getNodeStatus() {
+export async function getNodeStatus() : Promise<ldk_server.GetNodeStatusResponse>{
   try {
-    noStore();
+    // noStore();
     const request = ldk_server.GetNodeStatusRequest.create();
     const byteBuffer = ldk_server.GetNodeStatusRequest.encode(request).finish();
     const endpoint = '/getNodeStatus';
@@ -53,7 +51,7 @@ export async function getNodeStatus() {
     let deserResponse = ldk_server.GetNodeStatusResponse.decode(response.data);
     console.log(`${endpoint} Response: ` + JSON.stringify(deserResponse, undefined, 2));
 
-    return [];
+    return deserResponse;
 
   } catch (error) {
     console.error('Request Error:', error);
@@ -61,10 +59,10 @@ export async function getNodeStatus() {
   }
 }
 
-export async function Bolt11Receive(description: string, amountMsat: number, expirySecs: number) {
+export async function getBolt11ReceiveInvoice(): Promise<ldk_server.Bolt11ReceiveResponse> {
   try {
-    noStore();
-    const request = ldk_server.Bolt11ReceiveRequest.create({ description, amountMsat, expirySecs });
+    // noStore();
+    const request = ldk_server.Bolt11ReceiveRequest.create({ description:'DemoInvoice', amountMsat:50000, expirySecs:100000 });
     const byteBuffer = ldk_server.Bolt11ReceiveRequest.encode(request).finish();
     const endpoint = '/bolt11/receive';
     const response = await axios.post(`${baseUrl}${endpoint}`, byteBuffer, {
@@ -77,13 +75,14 @@ export async function Bolt11Receive(description: string, amountMsat: number, exp
     let deserResponse = ldk_server.Bolt11ReceiveResponse.decode(response.data);
     console.log(`${endpoint} Response: ` + JSON.stringify(deserResponse, undefined, 2));
 
-    return [];
+    return deserResponse;
 
   } catch (error) {
     console.error('Request Error:', error);
     throw new Error('Failed to fetch Bolt11ReceiveRequest.');
   }
 }
+
 export async function listPaymentHistory(): Promise<ldk_server.PaymentsHistoryResponse> {
   try {
     const request = ldk_server.PaymentsHistoryRequest.create({});
@@ -104,6 +103,52 @@ export async function listPaymentHistory(): Promise<ldk_server.PaymentsHistoryRe
   } catch (error) {
     console.error('Request Error:', error);
     throw new Error('Failed to fetch PaymentsHistoryRequest.');
+  }
+}
+
+export async function getNodeFundingAddress(): Promise<ldk_server.OnchainReceiveResponse> {
+  try {
+    const request = ldk_server.OnchainReceiveRequest.create({});
+    const byteBuffer = ldk_server.OnchainReceiveRequest.encode(request).finish();
+    const endpoint = '/onchain/receive';
+    const response = await axios.post(`${baseUrl}${endpoint}`, byteBuffer, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+      },
+      responseType: 'arraybuffer'
+    });
+
+    let deserResponse = ldk_server.OnchainReceiveResponse.decode(response.data);
+    console.log(`${endpoint} Response: ` + JSON.stringify(deserResponse));
+
+    return deserResponse;
+
+  } catch (error) {
+    console.error('Request Error:', error);
+    throw new Error('Failed to fetch OnchainReceiveRequest.');
+  }
+}
+
+export async function getBoltInvoice(): Promise<ldk_server.Bolt11ReceiveResponse> {
+  try {
+    const request = ldk_server.Bolt11ReceiveRequest.create({description:"DemoInvoice", amountMsat:50000, expirySecs:100000});
+    const byteBuffer = ldk_server.Bolt11ReceiveRequest.encode(request).finish();
+    const endpoint = '/bolt11/receive';
+    const response = await axios.post(`${baseUrl}${endpoint}`, byteBuffer, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+      },
+      responseType: 'arraybuffer'
+    });
+
+    let deserResponse = ldk_server.Bolt11ReceiveResponse.decode(response.data);
+    console.log(`${endpoint} Response: ` + JSON.stringify(deserResponse));
+
+    return deserResponse;
+
+  } catch (error) {
+    console.error('Request Error:', error);
+    throw new Error('Failed to fetch OnchainReceiveRequest.');
   }
 }
 
